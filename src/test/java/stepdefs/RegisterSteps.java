@@ -3,17 +3,25 @@ package stepdefs;
 import io.cucumber.java.en.*;
 import org.junit.Assert;
 import org.openqa.selenium.*;
-import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 
 public class RegisterSteps {
 
-    WebDriver webDriver;
+    // Använder samma WebDriver som skapas i ChromeHooks
+    WebDriver webDriver = ChromeHooks.webDriver;
+
+    // Privat metod med explicit wait (VG-krav)
+    private WebElement waitForVisible(By locator) {
+        WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(5));
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+    }
 
     @Given("att användaren öppnar registreringssidan")
     public void oppnar_registreringssidan() {
-        webDriver = new ChromeDriver();
-        webDriver.manage().window().maximize();
-
+        // ÄNDRA denna sökväg om din Register.html ligger någon annanstans
         String path = "file:///Users/sam.olsson2/Downloads/Register/Register.html";
         webDriver.get(path);
     }
@@ -28,9 +36,13 @@ public class RegisterSteps {
         webDriver.findElement(By.id("member_firstname")).sendKeys("Sam");
     }
 
-    @When("användaren anger sitt efternamn")
-    public void fyll_i_efter() {
-        webDriver.findElement(By.id("member_lastname")).sendKeys("Testsson");
+    // styr om efternamn ska fyllas i eller inte (Scenario Outline-kolumnen "efternamn")
+    @When("användaren anger sitt efternamn {string}")
+    public void fyll_i_efternamn_param(String efternamnFlagga) {
+        WebElement lastName = webDriver.findElement(By.id("member_lastname"));
+        if (!"saknas".equals(efternamnFlagga)) {
+            lastName.sendKeys("Testsson");
+        }
     }
 
     @When("användaren skriver in e-post och bekräftar den")
@@ -39,23 +51,21 @@ public class RegisterSteps {
         webDriver.findElement(By.id("member_confirmemailaddress")).sendKeys("test@yahoo.com");
     }
 
-    @When("användaren väljer ett lösenord och bekräftar det")
-    public void fyll_i_losenord() {
-        webDriver.findElement(By.id("signupunlicenced_password")).sendKeys("Lösenord123");
-        webDriver.findElement(By.id("signupunlicenced_confirmpassword")).sendKeys("Lösenord123");
+    // parametriserade lösenord (kolumnerna "losenord" och "bekraftaLosenord")
+    @When("användaren fyller i lösenord {string} och bekräftar {string}")
+    public void fyll_i_param_losenord(String losenord, String bekrafta) {
+        webDriver.findElement(By.id("signupunlicenced_password")).sendKeys(losenord);
+        webDriver.findElement(By.id("signupunlicenced_confirmpassword")).sendKeys(bekrafta);
     }
 
-    @When("användaren fyller i två olika lösenord")
-    public void olika_losenord() {
-        webDriver.findElement(By.id("signupunlicenced_password")).sendKeys("Lösenord123");
-        webDriver.findElement(By.id("signupunlicenced_confirmpassword")).sendKeys("Lösenord1234");
-    }
-
-    @When("användaren godkänner villkoren")
-    public void godkann_villkor() {
-        webDriver.findElement(By.cssSelector("label[for='sign_up_25']")).click();
-        webDriver.findElement(By.cssSelector("label[for='sign_up_26']")).click();
-        webDriver.findElement(By.cssSelector("label[for='fanmembersignup_agreetocodeofethicsandconduct']")).click();
+    // styr om villkoren ska godkännas eller inte (kolumnen "villkor")
+    @When("användaren godkänner villkoren {string}")
+    public void godkann_villkor_param(String villkorFlagga) {
+        if ("ja".equals(villkorFlagga)) {
+            webDriver.findElement(By.cssSelector("label[for='sign_up_25']")).click();
+            webDriver.findElement(By.cssSelector("label[for='sign_up_26']")).click();
+            webDriver.findElement(By.cssSelector("label[for='fanmembersignup_agreetocodeofethicsandconduct']")).click();
+        }
     }
 
     @When("användaren skickar in formuläret")
@@ -63,32 +73,19 @@ public class RegisterSteps {
         webDriver.findElement(By.cssSelector(".btn")).click();
     }
 
-    @Then("ska ett konto skapas")
-    public void konto_skapat() {
-        WebElement tack = webDriver.findElement(By.cssSelector("h2.gray"));
-        String resultat = tack.getText();
-        Assert.assertEquals("THANK YOU FOR CREATING AN ACCOUNT WITH BASKETBALL ENGLAND", resultat);
-        webDriver.quit();
-    }
+    // använder explicit wait för att läsa ut resultattexten
+    @Then("ska resultatet vara {string}")
+    public void kontrollera_meddelande(String meddelande) {
 
-    @Then("ska ett felmeddelande om efternamn visas")
-    public void fel_efternamn() {
-        WebElement error = webDriver.findElement(By.cssSelector("span[generated='true']"));
-        Assert.assertTrue(error.getText().contains("Last Name is required"));
-        webDriver.quit();
-    }
-
-    @Then("ska ett felmeddelande om lösenord visas")
-    public void fel_losenord() {
-        WebElement error = webDriver.findElement(By.cssSelector("span[generated='true']"));
-        Assert.assertTrue(error.getText().contains("Password did not match"));
-        webDriver.quit();
-    }
-
-    @Then("ska ett felmeddelande om villkoren visas")
-    public void fel_villkor() {
-        WebElement error = webDriver.findElement(By.cssSelector("span[generated='true']"));
-        Assert.assertTrue(error.getText().contains("Terms and Conditions"));
-        webDriver.quit();
+        if ("OK".equals(meddelande)) {
+            WebElement tack = waitForVisible(By.cssSelector("h2.gray"));
+            String resultat = tack.getText();
+            Assert.assertEquals("THANK YOU FOR CREATING AN ACCOUNT WITH BASKETBALL ENGLAND", resultat);
+        } else {
+            WebElement error = waitForVisible(By.cssSelector("span[generated='true']"));
+            Assert.assertTrue(error.getText().contains(meddelande));
+        }
     }
 }
+
+

@@ -1,47 +1,22 @@
 Feature: Användarregistrering på basketportalen
 
-  Scenario: Användare registrerar sig med korrekt information
+  Scenario Outline: Registrering av användare
     Given att användaren öppnar registreringssidan
     When användaren fyller i giltig födelsedag
     And användaren anger sitt förnamn
-    And användaren anger sitt efternamn
+    And användaren anger sitt efternamn "<efternamn>"
     And användaren skriver in e-post och bekräftar den
-    And användaren väljer ett lösenord och bekräftar det
-    And användaren godkänner villkoren
+    And användaren fyller i lösenord "<losenord>" och bekräftar "<bekraftaLosenord>"
+    And användaren godkänner villkoren "<villkor>"
     And användaren skickar in formuläret
-    Then ska ett konto skapas
+    Then ska resultatet vara "<meddelande>"
 
-  Scenario: Registrering misslyckas p.g.a. saknat efternamn
-    Given att användaren öppnar registreringssidan
-    When användaren fyller i giltig födelsedag
-    And användaren anger sitt förnamn
-    And användaren skriver in e-post och bekräftar den
-    And användaren väljer ett lösenord och bekräftar det
-    And användaren godkänner villkoren
-    And användaren skickar in formuläret
-    Then ska ett felmeddelande om efternamn visas
-
-  Scenario: Registrering misslyckas p.g.a. olika lösenord
-    Given att användaren öppnar registreringssidan
-    When användaren fyller i giltig födelsedag
-    And användaren anger sitt förnamn
-    And användaren anger sitt efternamn
-    And användaren skriver in e-post och bekräftar den
-    And användaren fyller i två olika lösenord
-    And användaren godkänner villkoren
-    And användaren skickar in formuläret
-    Then ska ett felmeddelande om lösenord visas
-
-  Scenario: Registrering misslyckas p.g.a. ej godkända villkor
-    Given att användaren öppnar registreringssidan
-    When användaren fyller i giltig födelsedag
-    And användaren anger sitt förnamn
-    And användaren anger sitt efternamn
-    And användaren skriver in e-post och bekräftar den
-    And användaren väljer ett lösenord och bekräftar det
-    And användaren skickar in formuläret
-    Then ska ett felmeddelande om villkoren visas
-
+    Examples:
+      | efternamn  | losenord     | bekraftaLosenord | villkor | meddelande             |
+      | finns      | Lösenord123  | Lösenord123      | ja      | OK                     |
+      | saknas     | Lösenord123  | Lösenord123      | ja      | Last Name is required  |
+      | finns      | Lösenord123  | Lösenord1234     | ja      | Password did not match |
+      | finns      | Lösenord123  | Lösenord123      | nej     | Terms and Conditions   |
 
 
 
