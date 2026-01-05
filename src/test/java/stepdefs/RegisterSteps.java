@@ -13,7 +13,7 @@ public class RegisterSteps {
     // Använder samma WebDriver som skapas i ChromeHooks
     WebDriver webDriver = ChromeHooks.webDriver;
 
-    // Privat metod med explicit wait (VG-krav)
+    // Privat metod med explicit wait
     private WebElement waitForVisible(By locator) {
         WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(5));
         return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
