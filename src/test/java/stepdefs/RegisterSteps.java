@@ -3,6 +3,7 @@ package stepdefs;
 import io.cucumber.java.en.*;
 import org.junit.Assert;
 import org.openqa.selenium.*;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -10,10 +11,10 @@ import java.time.Duration;
 
 public class RegisterSteps {
 
-    // Använder samma WebDriver som skapas i ChromeHooks
-    WebDriver webDriver = ChromeHooks.webDriver;
 
-    // Privat metod med explicit wait (VG-krav)
+    //WebDriver webDriver = new ChromeDriver();
+    WebDriver webDriver = new org.openqa.selenium.firefox.FirefoxDriver();
+
     private WebElement waitForVisible(By locator) {
         WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(5));
         return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
@@ -21,9 +22,9 @@ public class RegisterSteps {
 
     @Given("att användaren öppnar registreringssidan")
     public void oppnar_registreringssidan() {
-        // ÄNDRA denna sökväg om din Register.html ligger någon annanstans
-        String path = "file:///Users/sam.olsson2/Downloads/Register/Register.html";
+        String path = "file:///C:/Users/samol/Downloads/Register/Register.html"; // ändra vid behov
         webDriver.get(path);
+        webDriver.manage().window().maximize();
     }
 
     @When("användaren fyller i giltig födelsedag")
@@ -36,7 +37,6 @@ public class RegisterSteps {
         webDriver.findElement(By.id("member_firstname")).sendKeys("Sam");
     }
 
-    // styr om efternamn ska fyllas i eller inte (Scenario Outline-kolumnen "efternamn")
     @When("användaren anger sitt efternamn {string}")
     public void fyll_i_efternamn_param(String efternamnFlagga) {
         WebElement lastName = webDriver.findElement(By.id("member_lastname"));
@@ -51,14 +51,12 @@ public class RegisterSteps {
         webDriver.findElement(By.id("member_confirmemailaddress")).sendKeys("test@yahoo.com");
     }
 
-    // parametriserade lösenord (kolumnerna "losenord" och "bekraftaLosenord")
     @When("användaren fyller i lösenord {string} och bekräftar {string}")
     public void fyll_i_param_losenord(String losenord, String bekrafta) {
         webDriver.findElement(By.id("signupunlicenced_password")).sendKeys(losenord);
         webDriver.findElement(By.id("signupunlicenced_confirmpassword")).sendKeys(bekrafta);
     }
 
-    // styr om villkoren ska godkännas eller inte (kolumnen "villkor")
     @When("användaren godkänner villkoren {string}")
     public void godkann_villkor_param(String villkorFlagga) {
         if ("ja".equals(villkorFlagga)) {
@@ -73,7 +71,6 @@ public class RegisterSteps {
         webDriver.findElement(By.cssSelector(".btn")).click();
     }
 
-    // använder explicit wait för att läsa ut resultattexten
     @Then("ska resultatet vara {string}")
     public void kontrollera_meddelande(String meddelande) {
 
@@ -85,7 +82,7 @@ public class RegisterSteps {
             WebElement error = waitForVisible(By.cssSelector("span[generated='true']"));
             Assert.assertTrue(error.getText().contains(meddelande));
         }
+
+        webDriver.quit(); // stäng browsern efter varje scenario
     }
 }
-
-
